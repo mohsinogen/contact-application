@@ -26,9 +26,15 @@ function HomePage() {
 
   const pageSize = Number(searchParams.get("pageSize")) || 5;
   const pageNumber = Number(searchParams.get("pageNumber")) || 1;
+  const searchUsing = searchParams.get("searchUsing") || "";
+  const gender = searchParams.get("gender") || "";
+  const query = searchParams.get("query") || "";
 
   const [newPageSize, setNewPageSize] = useState(pageSize);
   const [newPageNumber, setNewPageNumber] = useState(pageNumber);
+  const [newSearchUsing, setNewSearchUsing] = useState(searchUsing);
+  const [newGender, setNewGender] = useState(gender);
+  const [newQuery, setNewQuery] = useState(query);
 
   const [totalPages, setTotalPages] = useState(1);
   const [totalRecords, setTotalRecords] = useState(0);
@@ -40,7 +46,7 @@ function HomePage() {
 
   const getContacts = async () => {
     setLoading(true);
-    setError("")
+    setError("");
     try {
       const config = {
         headers: {
@@ -50,12 +56,12 @@ function HomePage() {
 
       const res = await axios.get(
         baseURL +
-          `/api/contacts?pageSize=${newPageSize}&pageNumber=${newPageNumber}`
+          `/api/contacts?pageSize=${newPageSize}&pageNumber=${newPageNumber}&searchUsing=${newSearchUsing}&query=${newQuery}&gender=${newGender}`
       );
       setContactList(res.data.data.contactList);
       setTotalPages(res.data.data.totalPages);
       setTotalRecords(res.data.data.totalRecords);
-     
+
       setLoading(false);
     } catch (error) {
       if (error.response && error.response.data.remark) {
@@ -75,26 +81,97 @@ function HomePage() {
   return (
     <Container>
       <Row className="mt-1 align-items-center justify-content-between">
-        <Col className="py-3" xs={"12"} md={"8"}>
+        <Col className="py-3" xs={"12"} md={"3"}>
           <div className="d-flex align-items-center justify-content-start rounded px-3 border-radius-3 border border-secondary">
             <i className="me-3 fas fa-search" />
             <Form.Group style={{ flex: 1 }} controlId="search">
               <Form.Control
+                value={newQuery}
                 type="text"
                 placeholder="Search contact"
+                onChange={(e) => {
+                  setNewPageNumber("1");
+                  setNewQuery(e.target.value);
+                  /* setSearchParams({
+                    pageSize: newPageSize.toString(),
+                    pageNumber: "1",
+                    searchUsing: newSearchUsing,
+                    gender: newGender,
+                    query: e.target.value,
+                  }); */
+                }}
               ></Form.Control>
             </Form.Group>
           </div>
         </Col>
+        <Col xs={"12"} md={"3"}>
+          <Form.Select
+            value={newSearchUsing}
+            onChange={(e) => {
+              setNewPageNumber("1");
+              setNewSearchUsing(e.target.value);
+              /* setSearchParams({
+                pageSize: newPageSize.toString(),
+                pageNumber: "1",
+                searchUsing: e.target.value,
+                gender: newGender,
+                query: newQuery,
+              }); */
+            }}
+            placeholder="Search using"
+            defaultValue={""}
+          >
+            <option value={""}>Search Using</option>
+            <option value={"Firstname"}>Firstname</option>
+            <option value={"lastname"}>Lastname</option>
+            <option value={"number"}>Number</option>
+          </Form.Select>
+        </Col>
+        <Col xs={"12"} md={"2"}>
+          <Form.Select
+            value={newGender}
+            onChange={(e) => {
+              setNewGender(e.target.value);
+              setNewPageNumber("1");
+              /* setSearchParams({
+                pageSize: newPageSize.toString(),
+                pageNumber: "1",
+                searchUsing: newSearchUsing,
+                gender: e.target.value,
+                query: newQuery,
+              }); */
+            }}
+            placeholder="Select gender"
+            defaultValue={""}
+          >
+            <option value={""}>Select Gender</option>
+            <option value={"male"}>Male</option>
+            <option value={"female"}>Female</option>
+          </Form.Select>
+        </Col>
+        <Col className="d-grid gap-2 py-3" xs={"12"} md={"1"}>
+          <Button
+            onClick={() => {
+              setSearchParams({
+                pageSize: "5",
+                pageNumber: "1",
+                searchUsing: newSearchUsing,
+                gender: newGender,
+                query: newQuery,
+              });
+            }}
+          >
+            Search
+          </Button>
+        </Col>
         <Col className="d-grid gap-2 py-3" xs={"12"} md={"3"}>
           {user && (
             <Button
-              size="lg"
               onClick={() => {
                 navigate("/newcontact");
               }}
             >
-              <i className="fas fa-plus"></i> Create Contact
+              <i className="fas fa-plus"></i> Create
             </Button>
           )}
         </Col>
@@ -103,21 +180,22 @@ function HomePage() {
       {error && <Message variant="danger">{error}</Message>}
       {loading && <Loader />}
 
-      
-
       {contactList.length >= 1 && (
         <>
           <Row>
             <Col md={4}>
-              
               <Form.Label>Records to show</Form.Label>
-              <Form.Select value={pageSize} onChange={(e)=>{
-                setNewPageSize(e.target.value);
-                setSearchParams({
-                  pageSize: e.target.value.toString(),
-                  pageNumber: newPageNumber.toString(),
-                });
-              }} placeholder="Rows to show">
+              <Form.Select
+                value={pageSize}
+                onChange={(e) => {
+                  setNewPageSize(e.target.value);
+                  setSearchParams({
+                    pageSize: e.target.value.toString(),
+                    pageNumber: newPageNumber.toString(),
+                  });
+                }}
+                placeholder="Rows to show"
+              >
                 <option value={3}>3 Records</option>
                 <option value={5}>5 Records</option>
                 <option value={10}>10 Records</option>
@@ -157,7 +235,7 @@ function HomePage() {
                       }}
                       src={
                         item.profile
-                          ? `${baseURL+'/images/'+item.profile}`
+                          ? `${baseURL + "/images/" + item.profile}`
                           : require("../assets/user.png")
                       }
                       roundedCircle
@@ -182,6 +260,9 @@ function HomePage() {
                     setSearchParams({
                       pageSize: newPageSize.toString(),
                       pageNumber: `${index + 1}`,
+                      searchUsing: newSearchUsing,
+                      gender: newGender,
+                      query: newQuery,
                     });
                   }}
                 >
