@@ -1,6 +1,6 @@
 import "./App.css";
 import TopBar from "./components/TopBar";
-import { BrowserRouter as Router, Routes, Route, Redirect, Navigate } from "react-router-dom";
+import { HashRouter as Router, Routes, Route, Redirect, Navigate } from "react-router-dom";
 import HomePage from "./pages/HomePage";
 import { AuthProvider } from "./context/AuthContext";
 import RegisterPage from "./pages/RegisterPage";
