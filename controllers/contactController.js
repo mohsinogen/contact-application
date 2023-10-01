@@ -37,7 +37,7 @@ const createContact = asyncHandler(async (req, res) => {
     createdBy,
   });
 
-  await QRCode.toFile(`qrcodes/${contact._id}.png`,process.env.FRONTEND_URL + `/contacts/${contact._id}`)
+  await QRCode.toFile(`qrcodes/${contact._id}.png`,process.env.FRONTEND_URL + `/#/contacts/${contact._id}`)
 
   contact.qrcode = `${contact._id}.png`;
 
@@ -69,9 +69,44 @@ const getContactList = asyncHandler(async (req, res) => {
   const pageSize = parseInt(req.query.pageSize) || 10;
   const pageNumber = parseInt(req.query.pageNumber) || 1;
 
+  const searchUsing = req.query.searchUsing;
+  const query = req.query.query;
+
+  const filters = {};
+
+  if(searchUsing.toLowerCase()=='firstname' && query){
+    filters.firstname= {
+      $regex: query,
+      $options: "i",
+    }
+  } else if(searchUsing.toLowerCase()=='lastname' && query){
+      filters.lastname= {
+        $regex: query,
+        $options: "i",
+      }
+    
+  } else if(searchUsing=='number' && query){
+      filters.number= {
+        $regex: query,
+        $options: "i",
+      }
+  }
+
+  if (req.query.gender) {
+    filters.gender = req.query.gender;
+  }
+
+  console.log('filter', filters);
+
   try {
-    const totalRecords = await Contact.countDocuments();
+    const totalRecords = await Contact.countDocuments(filters);
+
+    if (totalRecords < 1) {
+      return res.status(400).json({ code: 400, remark: "No records to show" });
+    }
+
     const totalPages = Math.ceil(totalRecords / pageSize);
+
 
     if (pageNumber < 1 || pageNumber > totalPages) {
       return res.status(400).json({ code: 400, remark: "Invalid page number or page size" });
@@ -79,7 +114,7 @@ const getContactList = asyncHandler(async (req, res) => {
 
     const skip = (pageNumber - 1) * pageSize;
 
-    const contacts = await Contact.find().skip(skip).limit(pageSize);
+    const contacts = await Contact.find(filters).skip(skip).limit(pageSize);
 
     res.status(200).json({
       code: 200,
@@ -172,5 +207,35 @@ const editContact = asyncHandler(async (req, res) => {
   }
 });
 
+/**
+ * This method deletes a particular contact
+ * @route DELETE /api/contacts
+ * @returns {object} - A a success response.
+ * @throws {error} - If failes to edit contact.
+ * @access Private
+ */
+const deleteContact = asyncHandler(async (req, res) => {
 
-export { createContact , getContactList, getContactDetails, editContact};
+  const contactId = req.params.contactId;
+
+  const contact = await Contact.findById(contactId);
+
+  if (contact.createdBy.toString() != req.user._id.toString()) {
+    res.status(400);
+    throw new Error("Only owner can edit this contact");
+  }
+
+  await contact.save();
+
+  if (contact) {
+    res.status(201).json({
+      code: 201,
+      remark: "contact updated",
+    });
+  } else {
+    res.status(400);
+    throw new Error("Invalid contact data");
+  }
+});
+
+export { createContact , getContactList, getContactDetails, editContact, deleteContact};
