@@ -42,10 +42,6 @@ function TopBar() {
         </Link>
         <Navbar.Toggle aria-controls="responsive-navbar-nav" />
         <Navbar.Collapse id="responsive-navbar-nav">
-          {user && <Nav.Link onClick={()=> navigate("/favourites")}>
-            <i className="fa-solid fa-heart me-2" />
-            Favourites
-          </Nav.Link>}
           <Nav className="ms-auto">
             <Nav.Link onClick={profileClickHandler}>
               <i className="fa-solid fa-user me-2" />

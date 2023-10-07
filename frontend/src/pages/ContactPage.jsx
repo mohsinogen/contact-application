@@ -117,7 +117,7 @@ function ContactPage() {
               <Col md={3}>
                 <Card>
                   <Image
-                    src={`${baseURL}/qrcodes/${contact.qrcode}`}
+                    src={contact.qrcode}
                     alt={contact.firstname}
                     fluid
                   />

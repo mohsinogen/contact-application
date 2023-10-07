@@ -1,6 +1,27 @@
 import asyncHandler from "express-async-handler";
 import Contact from "../models/contactModel.js";
 import QRCode from "qrcode";
+//
+import firebaseAdmin from "firebase-admin";
+import { createRequire } from "module";
+const require = createRequire(import.meta.url); // construct the require method
+const serviceAccount = require("./../serviceAccountKey.json");
+
+
+const fireAdmin = firebaseAdmin.initializeApp({
+  credential: firebaseAdmin.credential.cert(serviceAccount),
+  storageBucket: "gs://contact-app-bucket.appspot.com",
+});
+
+const storageRef = fireAdmin.storage().bucket("gs://contact-app-bucket.appspot.com");
+
+async function uploadFile(path, filename) {
+  
+  return storageRef.upload(path,{
+    public: true,
+    destination: `qrcodes/${filename}`,
+  });
+}
 
 /**
  * This method takes values in request body
@@ -39,7 +60,12 @@ const createContact = asyncHandler(async (req, res) => {
 
   await QRCode.toFile(`qrcodes/${contact._id}.png`,process.env.FRONTEND_URL + `/#/contacts/${contact._id}`)
 
-  contact.qrcode = `${contact._id}.png`;
+  const file = await uploadFile(
+    `qrcodes/${contact._id}.png`,
+    `${contact._id}.png`
+  );
+
+  contact.qrcode = file[0].metadata.mediaLink;
 
   await contact.save();
 
