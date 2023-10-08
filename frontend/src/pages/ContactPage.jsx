@@ -95,7 +95,7 @@ function ContactPage() {
               <Image
                 src={
                   contact.profile
-                    ? `${baseURL+'/images/'+contact.profile}`
+                    ? contact.profile
                     : require("../assets/user.png")
                 }
                 alt={contact.firstname}

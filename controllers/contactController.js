@@ -1,27 +1,7 @@
 import asyncHandler from "express-async-handler";
 import Contact from "../models/contactModel.js";
 import QRCode from "qrcode";
-//
-import firebaseAdmin from "firebase-admin";
-import { createRequire } from "module";
-const require = createRequire(import.meta.url); // construct the require method
-const serviceAccount = require("./../serviceAccountKey.json");
-
-
-const fireAdmin = firebaseAdmin.initializeApp({
-  credential: firebaseAdmin.credential.cert(serviceAccount),
-  storageBucket: "gs://contact-app-bucket.appspot.com",
-});
-
-const storageRef = fireAdmin.storage().bucket("gs://contact-app-bucket.appspot.com");
-
-async function uploadFile(path, filename) {
-  
-  return storageRef.upload(path,{
-    public: true,
-    destination: `qrcodes/${filename}`,
-  });
-}
+import {uploadFile} from "../utils/helper.js"
 
 /**
  * This method takes values in request body
@@ -58,11 +38,17 @@ const createContact = asyncHandler(async (req, res) => {
     createdBy,
   });
 
+  if(profile!=""){
+    const userProfile = await uploadFile(`uploads/${contact.profile}`,`profile/${contact.profile}`);
+
+    contact.profile = userProfile[0].metadata.mediaLink;
+  }
+
   await QRCode.toFile(`qrcodes/${contact._id}.png`,process.env.FRONTEND_URL + `/#/contacts/${contact._id}`)
 
   const file = await uploadFile(
-    `qrcodes/${contact._id}.png`,
-    `${contact._id}.png`
+    `qrcodes/${contact._id}.png`, // File path on the server
+    `qrcodes/${contact._id}.png` // Firebase directory structure
   );
 
   contact.qrcode = file[0].metadata.mediaLink;
@@ -213,12 +199,20 @@ const editContact = asyncHandler(async (req, res) => {
     throw new Error("Only owner can edit this contact");
   }
 
-  contact.profile = profile || contact.profile;
+  if(profile!="" && profile != contact.profile){
+ 
+      const userProfile = await uploadFile(`uploads/${profile}`,`profile/${profile}`);
+      contact.profile = userProfile[0].metadata.mediaLink;
+
+  }
+
   contact.firstname = firstname || contact.firstname;
   contact.lastname = lastname || contact.lastname;
   contact.number = number || contact.number;
   contact.gender = gender || contact.gender;
   contact.address = address || contact.address;
+
+  
 
   await contact.save();
 

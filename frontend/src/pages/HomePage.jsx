@@ -235,7 +235,7 @@ function HomePage() {
                       }}
                       src={
                         item.profile
-                          ? `${baseURL + "/images/" + item.profile}`
+                          ? item.profile
                           : require("../assets/user.png")
                       }
                       roundedCircle

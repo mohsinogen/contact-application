@@ -1,6 +1,6 @@
 import User from "../models/userModel.js";
 import asyncHandler from "express-async-handler";
-import generateToken from "../utils/helper.js";
+import { generateToken } from "../utils/helper.js";
 
 /**
  * This method takes three values in request body
