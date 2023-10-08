@@ -53,6 +53,32 @@ function ContactPage() {
     }
   };
 
+  const deleteContactHandler = async () => {
+    setLoading(true);
+    try {
+      const config = {
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${user.token}`
+        },
+      };
+
+      const res = await axios.delete(
+        baseURL + `/api/contacts/${params.contactId}`, config
+      );
+      alert('Contact deleted')
+      setLoading(false);
+    } catch (error) {
+      if (error.response && error.response.data.remark) {
+        setError(error.response.data.remark);
+      } else {
+        setError(error.message);
+      }
+      console.log("error", error);
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
     getContactDetails();
   }, []);
@@ -68,21 +94,36 @@ function ContactPage() {
               navigate(-1);
             }}
           >
-            <i className="fas fa-chevron-left" />  Go Back
+            <i className="fas fa-chevron-left" /> Go Back
           </Button>
         </Col>
 
-        {user && (<Col md={3}>
-          <Button
-            className="my-3"
-            variant="primary"
-            onClick={() => {
-             navigate(`/editcontact/${contact._id}`)
-            }}
-          >
-            <i className="fa-solid fa-pen me-2" /> Edit Contact
-          </Button>
-        </Col>)}
+        {user && (
+          <Col md={3}>
+            <Button
+              className="my-3"
+              variant="primary"
+              onClick={() => {
+                navigate(`/editcontact/${contact._id}`);
+              }}
+            >
+              <i className="fa-solid fa-pen me-2" /> Edit Contact
+            </Button>
+          </Col>
+        )}
+        {user &&
+          contact.createdBy ==
+            user?._id && (
+              <Col md={1}>
+                <Button
+                  className="my-3"
+                  variant="danger"
+                  onClick={deleteContactHandler}
+                >
+                  <i class="fa-solid fa-trash" />
+                </Button>
+              </Col>
+            )}
       </Row>
       {loading ? (
         <Loader />
@@ -116,11 +157,7 @@ function ContactPage() {
             {contact.qrcode && (
               <Col md={3}>
                 <Card>
-                  <Image
-                    src={contact.qrcode}
-                    alt={contact.firstname}
-                    fluid
-                  />
+                  <Image src={contact.qrcode} alt={contact.firstname} fluid />
                 </Card>
               </Col>
             )}

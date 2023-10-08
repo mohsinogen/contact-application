@@ -242,15 +242,15 @@ const deleteContact = asyncHandler(async (req, res) => {
 
   if (contact.createdBy.toString() != req.user._id.toString()) {
     res.status(400);
-    throw new Error("Only owner can edit this contact");
+    throw new Error("Only owner can delete this contact");
   }
 
-  await contact.save();
+  const contactToDelete = await  Contact.findByIdAndDelete({_id:contactId});
 
-  if (contact) {
+  if (contactToDelete) {
     res.status(201).json({
       code: 201,
-      remark: "contact updated",
+      remark: "contact deleted",
     });
   } else {
     res.status(400);
